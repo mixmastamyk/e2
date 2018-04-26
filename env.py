@@ -47,14 +47,6 @@ class Entry(str):
             return None
 
     @property
-    def list(self, sep=os.pathsep):
-        ''' Split a path string (defaults to os.pathsep) and return list.
-
-            Use str.split instead when a custom delimiter is needed.
-        '''
-        return self.split(sep)
-
-    @property
     def float(self):
         ''' Return a float. '''
         return float(self)
@@ -63,6 +55,14 @@ class Entry(str):
     def int(self):
         ''' Return a float. '''
         return int(self)
+
+    @property
+    def list(self, sep=os.pathsep):
+        ''' Split a path string (defaults to os.pathsep) and return list.
+
+            Use str.split instead when a custom delimiter is needed.
+        '''
+        return self.split(sep)
 
     @property
     def path(self):
