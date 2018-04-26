@@ -32,7 +32,9 @@ add to the visual clutter:
 
 Introducing the ``env`` module.
 With it I've tried to whittle complexity down primarily via direct attribute
-access::
+access:
+
+.. code:: python
 
     >>> import env
 
@@ -47,7 +49,7 @@ But wait, there's more!
 Install
 ---------------
 
-::
+.. code:: shell
 
     ⏵ pip3 install --user $PKG_NAME  # TBD
 
@@ -60,7 +62,9 @@ Options
 By default the module loads the variables into its namespace,
 so no additional mapping instance has to be created or imported.
 Unless you want to configure the interface further, of course.
-The following options are available to customize its behavior::
+The following options are available to customize its behavior:
+
+.. code:: python
 
     >>> from env import Environment
 
@@ -82,7 +86,9 @@ this one signals missing variables by returning None.
 It allows one to easily test for a variable and not have to worry about
 catching exceptions.
 If the variable is not set,
-None will be returned instead::
+None will be returned instead:
+
+.. code:: python
 
     >>> if env.COLORTERM:
             pass
@@ -105,7 +111,9 @@ depending on how the variable was accessed.
 
 Aside—Get item (bracketed) form works also,
 in cases where the variable name is in a string,
-due to the fact that the module/Environment-instance is a dictionary underneath::
+due to the fact that the module/Environment-instance is a dictionary underneath:
+
+.. code:: python
 
     varname = 'COLORTERM'
     env[varname]
@@ -142,13 +150,17 @@ While using ``env`` at the interactive prompt,
 you may be surprised that a variable entry is not a simple string but rather
 a string-like object called an Entry.
 This becomes most evident at the prompt because it prints a "representation"
-form by default::
+form by default:
+
+.. code:: python
 
     >>> env.PWD                             # repr
     Entry('PWD', '/usr/local')
 
 No matter however,
-as any operation that occurs renders the string value as normal::
+as any operation that occurs renders the string value as normal:
+
+.. code:: python
 
     >>> print(env.PWD)
     /usr/local
@@ -159,7 +171,9 @@ which we'll explore below.
 
 Remember the ``env`` module/Environment-instance works as a dictionary,
 while entry values are strings,
-so their full functionality is available::
+so their full functionality is available:
+
+.. code:: python
 
     >>> for key, value in env.items():
             print(key, value)
@@ -177,7 +191,9 @@ Parsing & Conversions
 
 Another handy feature is convenient type conversion and parsing of values
 from strings.
-For example::
+For example:
+
+.. code:: python
 
     >>> env.PI.float
     3.1416
@@ -193,7 +209,9 @@ Booleans
 ~~~~~~~~~~
 
 To interpret boolean-ish "``0 1 yes no true false``" string values
-case insensitively::
+case insensitively:
+
+.. code:: python
 
     >>> env.QT_ACCESSIBILITY
     Entry('QT_ACCESSIBILITY', '1')
@@ -210,12 +228,15 @@ case insensitively::
 As always, standard tests or ``bool()`` on the entry can be done to check for
 standard string "truthiness."
 
+
 Paths
 ~~~~~~~~
 
 To split path strings on ``os.pathsep``,
 with optional conversion to ``pathlib.Path`` objects,
-use one or more of the following::
+use one or more of the following:
+
+.. code:: python
 
     >>> env.XDG_DATA_DIRS.list
     ['/usr/local/share', '/usr/share']
@@ -235,7 +256,9 @@ Compatibility
 
 This ``env`` module/Environment-instance attempts compatibility with KR's
 `env <https://github.com/kennethreitz/env>`_
-package by implementing its ``prefix`` and ``map`` functions::
+package by implementing its ``prefix`` and ``map`` functions:
+
+.. code:: python
 
     >>> env.prefix('XDG_')
     {'xdg_config_dirs': '/etc/xdg/xdg-mate:/etc/xdg', …}
@@ -250,6 +273,8 @@ Tests
 ---------------
 
 Can be run here:
+
+.. code:: shell
 
     ⏵ python3 -m $PKG_NAME -v
 
