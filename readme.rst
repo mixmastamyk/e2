@@ -7,7 +7,9 @@ env
 It's always been a tad clumsy to use environment variables and combine them
 with other strings in Python,
 compared to shell languages at least.
-For example, look how easy in bash::
+For example, look how easy in bash:
+
+.. code:: shell
 
     ⏵ echo "Libraries: $PWD/lib"
     Libraries: /usr/local/lib
