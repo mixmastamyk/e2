@@ -32,7 +32,7 @@ class Entry(str):
         self.value = value
 
     @property
-    def as_bool(self):
+    def bool(self):
         ''' '''
         lower = self.lower()
         if lower.isdigit():
@@ -47,7 +47,7 @@ class Entry(str):
             return None
 
     @property
-    def as_list(self, sep=os.pathsep):
+    def list(self, sep=os.pathsep):
         ''' Split a path string (defaults to os.pathsep) and return list.
 
             Use str.split instead when a custom delimiter is needed.
@@ -55,24 +55,23 @@ class Entry(str):
         return self.split(sep)
 
     @property
-    def as_float(self):
+    def float(self):
         ''' Return a float. '''
         return float(self)
 
     @property
-    def as_int(self):
+    def int(self):
         ''' Return a float. '''
         return int(self)
-    int = as_int
 
     @property
-    def as_path(self):
-        ''' Return a Path. '''
+    def path(self):
+        ''' Return a path string as a Path object. '''
         from pathlib import Path
         return Path(self)
 
     @property
-    def as_path_list(self, sep=os.pathsep):
+    def path_list(self, sep=os.pathsep):
         ''' Return list of Path objects. '''
         from pathlib import Path
         return [ Path(pathstr) for pathstr in self.split(sep) ]
@@ -201,34 +200,36 @@ if __name__ == '__main__':
             >>> 'EMPTY' in env                          # check existence
             True
 
-            >>> bool(env.EMPTY)                         # check if empty
+            >>> bool(env.EMPTY)                         # check if empty: False
             False
 
-            >>> env['PI']                               # getitem
+            >>> env['PI']                               # getitem syntax
             '3.14'
 
-            >>> env.PI.as_float                         # conversion
+            >>> env.PI.float                            # type conversion
             3.14
 
-            >>> env.STATUS.as_int
+            >>> env.STATUS.int
             5150
 
-            >>> env.QT_ACCESSIBILITY.as_bool            # 0/1/yes/no/true/false
+            >>> env.QT_ACCESSIBILITY.bool               # 0/1/yes/no/true/false
             True
 
             >>> sorted(env.JSON_DATA.from_json.keys())  # compat < 3.6
             ['one', 'three', 'two']
 
-            >>> env.XDG_DATA_DIRS.as_list
+            >>> env.XDG_DATA_DIRS.list
             ['/usr/local/share', '/usr/share']
 
-            # isinstance - avoid Windows errs
+            # using isinstance to avoid Platform errs:
             >>> from pathlib import Path
-            >>> isinstance(env.SSH_AUTH_SOCK.as_path, Path)
+            >>> isinstance(env.SSH_AUTH_SOCK.path, Path)
             True
 
-            >>> all(map(lambda p: isinstance(p, Path), env.XDG_DATA_DIRS.as_path_list))
+            >>> all(map(lambda p: isinstance(p, Path), env.XDG_DATA_DIRS.path_list))
             True
+
+        KR/env compatibility::
 
             >>> sorted(env.prefix('XDG_', False).keys())
             ['XDG_DATA_DIRS', 'XDG_SESSION_ID', 'XDG_SESSION_TYPE']
@@ -236,7 +237,7 @@ if __name__ == '__main__':
             >>> env.map(username='USER')
             {'username': 'fred'}
 
-        Writing is possible when readonly is set False (see above),
+        Writing possible when readonly is set False (see above),
         though not usually useful::
 
             >>> env.READY
@@ -276,9 +277,9 @@ if __name__ == '__main__':
 
         Errors::
 
-            >>> env.XDG_DATA_DIRZ.as_list               # TODO: figure out
+            >>> env.XDG_DATA_DIRZ.list               # TODO: figure out
             Traceback (most recent call last):
-            AttributeError: 'NoneType' object has no attribute 'as_list'
+            AttributeError: 'NoneType' object has no attribute 'list'
 
     '''
     import doctest
