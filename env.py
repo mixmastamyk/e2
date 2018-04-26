@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
     env.py
 
-    Simplified access to environment variables.
+    Simplified access to environment variables in Python.
 
-    @copyright: 2018 by Mike Miller <mgmiller@studioxps>
+    @copyright: 2018 by Mike Miller
     @license: BSD
 
 '''
 import sys, os
-from collections.abc import MutableMapping
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping  # Py2
 
 __version__ = '0.60'
 if os.name == 'nt':
@@ -25,7 +29,7 @@ class Entry(str):
         properties for type conversion.
     '''
     def __new__(cls, name, value):
-        return super().__new__(cls, value)
+        return str.__new__(cls, value)  # Py2/3
 
     def __init__(self, name, value):
         self.name = name
@@ -94,6 +98,8 @@ class Environment(MutableMapping):
 
         blankify takes precedence over noneify.
     '''
+    _Entry_class = Entry    # save for Python2 compatibility :-/
+
     def __init__(self, environ=os.environ,
                        sensitive=sensitive,
                        blankify=False,
@@ -124,12 +130,15 @@ class Environment(MutableMapping):
         # need an loophole for configuring a new instance
         if name == 'Environment':
             return Environment
+        elif name == 'Entry':
+            return Entry or self._Entry_class  # Py2
 
         if not self._sensitive:
             name = name.lower()
 
         try:
-            return Entry(name, self._envars[name])
+            #~ return Entry(name, self._envars[name])
+            return self._Entry_class(name, self._envars[name])  # Py2 compat
         except KeyError as err:
             if self._blankify:
                 return self._envars.setdefault(name, Entry('', ''))
@@ -302,5 +311,4 @@ if __name__ == '__main__':
 
 else:
     # Wrap module with instance for direct access
-    #~ env = Environment()
     sys.modules[__name__] = Environment()
