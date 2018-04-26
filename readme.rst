@@ -73,7 +73,7 @@ The following options are available to customize its behavior:
                           noneify=True,
                           readonly=True,
                           sensitive=…,
-                        )
+                         )
 
 Note that a mapping of your own choosing can be passed as the first argument,
 for testing or other purposes.
@@ -219,7 +219,7 @@ case insensitively:
     >>> env.QT_ACCESSIBILITY.bool
     True
 
-    >>> env = Environment(readonly=False)
+    >>> env = Environment(readonly=False)       # set to '0'
     >>> env.QT_ACCESSIBILITY = '0'
 
     >>> env.QT_ACCESSIBILITY.bool
@@ -277,6 +277,9 @@ Can be run here:
 .. code:: shell
 
     ⏵ python3 -m $PKG_NAME -v
+
+Though the module should work, several of the tests don't on Python2,
+and haven't had the urge to remove them.
 
 
 Pricing
