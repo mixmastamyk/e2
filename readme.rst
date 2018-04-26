@@ -15,7 +15,9 @@ For example, look how easy in bash::
 In Python-land however,
 even the new-fangled string interpolation doesn't really help.
 Required opposite/escaped quotes and brackets complicate and unfortunately
-add to the visual clutter::
+add to the visual clutter:
+
+.. code:: python
 
     >>> from os import environ
 
