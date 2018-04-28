@@ -4,7 +4,7 @@ env
 
 *Environment variables for sentient lifeforms.*
 
-It's always been a tad clumsy to use environment variables and combine them
+It's always been a tad clumsy to access environment variables and combine them
 with other strings in Python,
 compared to shell languages at least.
 For example, look how easy in bash:
@@ -30,9 +30,10 @@ add to the visual clutter:
     >>> join(environ['PWD'], 'lib')
     '/usr/local/lib'
 
-Introducing the ``env`` module.
-With it I've tried to whittle complexity down primarily via direct attribute
-access:
+
+With that in mind, allow me to introduce the ``env`` module.
+With it I've tried to whittle complexity down,
+primarily through direct attribute access:
 
 .. code:: python
 
@@ -59,10 +60,10 @@ BSD licensed.
 Options
 -----------
 
-By default the module loads the variables into its namespace,
+By default the module loads the environment into its namespace,
 so no additional mapping instance has to be created or imported.
 Unless you want to configure the interface further, of course.
-The following options are available to customize its behavior:
+The following options are available to customize:
 
 .. code:: python
 
@@ -71,12 +72,12 @@ The following options are available to customize its behavior:
     >>> env = Environment(environ=os.environ,
                           blankify=False,
                           noneify=True,
-                          readonly=True,
                           sensitive=…,
+                          writable=False,
                          )
 
 Note that a mapping of your own choosing can be passed as the first argument,
-for testing or other purposes.
+for testing and/or other purposes.
 
 Noneify
 ~~~~~~~~~~~~
@@ -90,7 +91,7 @@ None will be returned instead:
 
 .. code:: python
 
-    >>> if env.COLORTERM:
+    >>> if env.COLORTERM:   # is not None or ''
             pass
 
 
@@ -100,7 +101,7 @@ Blankify
 Off by default,
 this option mimics the behavior of most command-line shells.
 Namely if the variable isn't found,
-it doesn't complain and replaces the variable with an empty string instead.
+it doesn't complain and returns an empty string instead.
 Could be a bug-magnet,
 but here if you need it for compatibility.
 
@@ -109,9 +110,10 @@ If both ``blankify`` and ``noneify`` are disabled,
 you'll get a lovely AttributeError or KeyError on missing keys,
 depending on how the variable was accessed.
 
-Aside—Get item (bracketed) form works also,
-in cases where the variable name is in a string,
-due to the fact that the module/Environment-instance is a dictionary underneath:
+**Aside:** Get item (bracketed) form also works,
+for use in cases where the variable name is in a string,
+due to the fact that the module/Environment-instance is still a dictionary
+underneath:
 
 .. code:: python
 
@@ -119,21 +121,20 @@ due to the fact that the module/Environment-instance is a dictionary underneath:
     env[varname]
 
 
-Readonly
+Writable
 ~~~~~~~~~~~~
 
-What it says on the tin.
 By default the Environment does not allow modifications since such variables
 are rarely read after start up.
 This setting helps to remind us of that fact,
-though the object can be changed to writable by disabling this option.
+though the object can be easily be changed to writable by disabling this
+option.
 
 
-Sensitivity
-~~~~~~~~~~~~~~~~~~~~~~
+Sensitivity 😢
+~~~~~~~~~~~~~~~~
 
-Variables are case-sensitive by default on Unix, not under Windows,
-*sniff.* 😢
+Variables are case-sensitive by default on Unix, not under Windows.
 
 While sensitivity can be disabled to use variable names in lowercase,
 be aware that variables and dictionary methods are in the same namespace,
@@ -148,7 +149,7 @@ Entry Objects
 
 While using ``env`` at the interactive prompt,
 you may be surprised that a variable entry is not a simple string but rather
-a string-like object called an Entry.
+an extended string-like object called an Entry.
 This becomes most evident at the prompt because it prints a "representation"
 form by default:
 
@@ -175,22 +176,23 @@ so their full functionality is available:
 
 .. code:: python
 
-    >>> for key, value in env.items():
+    >>> for key, value in env.items():      # it's a dict
             print(key, value)
 
     # output…
 
-    >>> env.USER.title()
+    >>> env.USER.title()                    # it's a str
     'Fred'
 
-    >>> env.TERM.partition('-')  # safer split
+    >>> env.TERM.partition('-')             # a safer split
     ('xterm', '-', '256color')
 
 Parsing & Conversions
 -----------------------
 
 Another handy feature is convenient type conversion and parsing of values
-from strings.
+from strings,
+using additional properties of an Entry object.
 For example:
 
 .. code:: python
@@ -208,7 +210,7 @@ For example:
 Booleans
 ~~~~~~~~~~
 
-To interpret boolean-ish "``0 1 yes no true false``" string values
+To interpret boolean-*ish* "``0 1 yes no true false``" string values
 case insensitively:
 
 .. code:: python
@@ -219,8 +221,8 @@ case insensitively:
     >>> env.QT_ACCESSIBILITY.bool
     True
 
-    >>> env = Environment(readonly=False)       # set to '0'
-    >>> env.QT_ACCESSIBILITY = '0'
+    >>> env = Environment(readonly=False)
+    >>> env.QT_ACCESSIBILITY = '0'          # set to '0'
 
     >>> env.QT_ACCESSIBILITY.bool
     False
@@ -278,8 +280,11 @@ Can be run here:
 
     ⏵ python3 -m $PKG_NAME -v
 
-Though the module should work, several of the tests don't on Python2,
-and haven't had the urge to remove them.
+Though the module should work under Python2,
+several of the tests *don't*,
+because Py2 does Unicode differently or
+doesn't have the facilities available to handle them (pathlib).
+Haven't had the urge to work around that due to declining interest.
 
 
 Pricing

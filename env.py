@@ -15,11 +15,11 @@ try:
 except ImportError:
     from collections import MutableMapping  # Py2
 
-__version__ = '0.60'
+__version__ = '0.80'
 if os.name == 'nt':
-    sensitive = False
+    _sensitive = False
 else:
-    sensitive = True
+    _sensitive = True
 
 
 class Entry(str):
@@ -101,10 +101,10 @@ class Environment(MutableMapping):
     _Entry_class = Entry    # save for Python2 compatibility :-/
 
     def __init__(self, environ=os.environ,
-                       sensitive=sensitive,
+                       sensitive=_sensitive,
                        blankify=False,
                        noneify=True,
-                       readonly=True,
+                       writable=False,
                 ):
         # setobj - prevents infinite recursion due to custom setattr
         # https://stackoverflow.com/a/16237698/450917
@@ -113,7 +113,7 @@ class Environment(MutableMapping):
         setobj(self, '_noneify', noneify),
         setobj(self, '_original_env', environ),
         setobj(self, '_sensitive', sensitive),
-        setobj(self, '_readonly', readonly),
+        setobj(self, '_writable', writable),
 
         if sensitive:
             setobj(self, '_envars', environ)
@@ -148,13 +148,13 @@ class Environment(MutableMapping):
                 raise AttributeError(name)
 
     def __setattr__(self, name, value):
-        if self._readonly:
-            raise AttributeError('Environment is read-only.')
-        else:
+        if self._writable:
             self._envars[name] = value
 
             if self._original_env is os.environ:  # push to environment
                 os.environ[name] = value
+        else:
+            raise AttributeError('Environment is read-only.')
 
     def __delattr__(self, name):
         del self._envars[name]
@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
         Default::
 
-            >>> env = Environment(variables, readonly=False)
+            >>> env = Environment(testenv, writable=True)
 
             >>> env.USER                                # repr
             Entry('USER', 'fred')
@@ -246,8 +246,8 @@ if __name__ == '__main__':
             >>> env.map(username='USER')
             {'username': 'fred'}
 
-        Writing possible when readonly is set False (see above),
-        though not usually useful::
+        Writing possible when writable is set to True (see above),
+        though not typically useful::
 
             >>> env.READY
             Entry('READY', 'no')
@@ -265,20 +265,20 @@ if __name__ == '__main__':
 
         Noneify False::
 
-            >>> env = Environment(variables, noneify=False)
+            >>> env = Environment(testenv, noneify=False)
             >>> env.USERZ                               # missing, kaboom!
             Traceback (most recent call last):
             AttributeError: USERZ
 
         Blankify True::
 
-            >>> env = Environment(variables, blankify=True)
+            >>> env = Environment(testenv, blankify=True)
             >>> env.USERZ                               # missing --> blank
             <BLANKLINE>
 
         Sensitive False::
 
-            >>> env = Environment(variables, sensitive=False)
+            >>> env = Environment(testenv, sensitive=False)
             >>> str(env.USER)                           # repr
             'fred'
             >>> str(env.user)                           # repr
@@ -293,7 +293,7 @@ if __name__ == '__main__':
     '''
     import doctest
 
-    variables = dict(
+    testenv = dict(
         EMPTY='',
         JSON_DATA='{"one":1, "two":2, "three":3}',
         PI='3.14',
@@ -307,7 +307,11 @@ if __name__ == '__main__':
         XDG_SESSION_ID='c1',
         XDG_SESSION_TYPE='x11',
     )
-    doctest.testmod(verbose=(True if '-v' in sys.argv else False))
+
+    # testmod returns (failure_count, test_count):
+    sys.exit(
+        doctest.testmod(verbose=(True if '-v' in sys.argv else False))[0]
+    )
 
 else:
     # Wrap module with instance for direct access

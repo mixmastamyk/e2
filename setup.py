@@ -1,7 +1,16 @@
 #!/usr/bin/env python
 from distutils.core import setup
 
-from .env import __version__ as version
+# grab metadata
+version = '1.00'
+with open('env.py') as f:
+    for line in f:
+        if line.startswith('__version__'):
+            try:
+                version = line.split("'")[1]
+            except IndexError:
+                pass
+            break
 
 # readme is needed at register time, not install time
 try:
