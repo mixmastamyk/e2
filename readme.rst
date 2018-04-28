@@ -83,7 +83,7 @@ Noneify
 ~~~~~~~~~~~~
 
 Enabled by default,
-this one signals missing variables by returning None.
+this one signals non-existent variables by returning None.
 It allows one to easily test for a variable and not have to worry about
 catching exceptions.
 If the variable is not set,
@@ -104,30 +104,16 @@ Namely if the variable isn't found,
 it doesn't complain and returns an empty string instead.
 Could be a bug-magnet,
 but here if you need it for compatibility.
-
 Blankify takes precedence over Noneify if enabled.
-If both ``blankify`` and ``noneify`` are disabled,
-you'll get a lovely AttributeError or KeyError on missing keys,
-depending on how the variable was accessed.
-
-**Aside:** Get item (bracketed) form also works,
-for use in cases where the variable name is in a string,
-due to the fact that the module/Environment-instance is still a dictionary
-underneath:
-
-.. code:: python
-
-    varname = 'COLORTERM'
-    env[varname]
 
 
 Writable
 ~~~~~~~~~~~~
 
-By default the Environment does not allow modifications since such variables
-are rarely read after start up.
+By default the Environment object does not allow modifications since such
+variables are rarely read after start up.
 This setting helps to remind us of that fact,
-though the object can be easily be changed to writable by disabling this
+though the object can be easily be changed to writable by enabling this
 option.
 
 
@@ -144,18 +130,40 @@ are not a good idea while in insensitive mode.
 *shrug*
 
 
+Misc
+~~~~~~~~~~~~~~~~
+
+**Exceptions**
+
+If both ``blankify`` and ``noneify`` are disabled,
+you'll get a lovely AttributeError or KeyError on missing keys,
+depending on how the variable was accessed.
+
+**Get-Item Form**
+
+Get-item [bracketed] form also works,
+for use in cases where the variable name is in a string,
+due to the fact that the module/Environment-instance is still a dictionary
+underneath:
+
+.. code:: python
+
+    varname = 'COLORTERM'
+    env[varname]
+
+
 Entry Objects
 ----------------
 
 While using ``env`` at the interactive prompt,
 you may be surprised that a variable entry is not a simple string but rather
 an extended string-like object called an Entry.
-This becomes most evident at the prompt because it prints a "representation"
+This is most evident at the prompt because it prints a "representation"
 form by default:
 
 .. code:: python
 
-    >>> env.PWD                             # repr
+    >>> env.PWD                             # repr()
     Entry('PWD', '/usr/local')
 
 No matter however,
@@ -176,23 +184,26 @@ so their full functionality is available:
 
 .. code:: python
 
-    >>> for key, value in env.items():      # it's a dict
+    >>> for key, value in env.items():      # it's a dict*
             print(key, value)
 
     # output…
 
-    >>> env.USER.title()                    # it's a str
+    >>> env.USER.title()                    # it's a str*
     'Fred'
 
     >>> env.TERM.partition('-')             # a safer split
     ('xterm', '-', '256color')
 
+*  Sung to the tune, *"It's a Sin,"* by the Pet Shop Boys.
+
+
 Parsing & Conversions
 -----------------------
 
-Another handy feature is convenient type conversion and parsing of values
-from strings,
-using additional properties of an Entry object.
+Another handy feature of Entry objects is convenient type conversion and
+parsing of values from strings.
+Additional properties for this functionality are available.
 For example:
 
 .. code:: python
@@ -210,8 +221,9 @@ For example:
 Booleans
 ~~~~~~~~~~
 
-To interpret boolean-*ish* "``0 1 yes no true false``" string values
-case insensitively:
+Variables may contain boolean-*ish* string values,
+such as ``0, 1, yes, no, true, false``, etc.
+To interpret them case-insensitively:
 
 .. code:: python
 
@@ -221,7 +233,7 @@ case insensitively:
     >>> env.QT_ACCESSIBILITY.bool
     True
 
-    >>> env = Environment(readonly=False)
+    >>> env = Environment(writable=True)
     >>> env.QT_ACCESSIBILITY = '0'          # set to '0'
 
     >>> env.QT_ACCESSIBILITY.bool
@@ -234,8 +246,12 @@ standard string "truthiness."
 Paths
 ~~~~~~~~
 
-To split path strings on ``os.pathsep``,
-with optional conversion to ``pathlib.Path`` objects,
+Environment vars often contain a list of filesystem paths.
+To split such path strings on ``os.pathsep``\
+`🔗 <https://docs.python.org/3/library/os.html#os.pathsep>`_,
+with optional conversion to ``pathlib.Path``\
+`🔗² <https://docs.python.org/3/library/pathlib.html>`_
+objects,
 use one or more of the following:
 
 .. code:: python
@@ -247,7 +263,7 @@ use one or more of the following:
     Path('/run/user/1000/keyring/ssh')
 
     >>> env.XDG_DATA_DIRS.path_list
-    [Path('/usr/local/share'), Path('/usr/share')]
+    [Path('/usr/local/share'), Path('/usr/share'), …]
 
 
 
@@ -256,7 +272,7 @@ Compatibility
 
 *"What's the frequency Kenneth?"*
 
-This ``env`` module/Environment-instance attempts compatibility with KR's
+This module attempts compatibility with KR's
 `env <https://github.com/kennethreitz/env>`_
 package by implementing its ``prefix`` and ``map`` functions:
 
@@ -280,7 +296,7 @@ Can be run here:
 
     ⏵ python3 -m $PKG_NAME -v
 
-Though the module should work under Python2,
+Though the module works under Python2,
 several of the tests *don't*,
 because Py2 does Unicode differently or
 doesn't have the facilities available to handle them (pathlib).
