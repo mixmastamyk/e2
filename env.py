@@ -173,14 +173,14 @@ class Environment(MutableMapping):
     def prefix(self, prefix, lowercase=True):
         ''' Compat with kr/env, lowercased.
 
-        '''         # str strips Entry
+        '''                                           # str strips Entry
         return { (key.lower() if lowercase else key): str(self._envars[key])
                  for key in self._envars.keys()
                  if key.startswith(prefix) }
 
     def map(self, **kwargs):
         ''' Compat with kr/env. '''
-        return { key: str(self._envars[kwargs[key]])    # str strips Entry
+        return { key: str(self._envars[kwargs[key]])  # str strips Entry
                  for key in kwargs }
 
 
