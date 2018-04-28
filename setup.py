@@ -23,7 +23,7 @@ except IOError:
 setup(
     name          = 'env',
     version       = version,
-    description   = 'A simpler interface to environment variables.',
+    description   = 'A more convenient interface to environment variables.',
     author        = 'Mike Miller',
     author_email  = 'mixmastamyk@bitbucket.org',
     url           = 'https://github.com/mixmastamyk/env',
