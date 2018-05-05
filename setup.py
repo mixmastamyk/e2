@@ -21,7 +21,7 @@ except IOError:
 
 
 setup(
-    name          = 'env',
+    name          = 'ez_env',
     version       = version,
     description   = 'A more convenient interface to environment variables.',
     author        = 'Mike Miller',

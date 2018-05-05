@@ -15,11 +15,11 @@ try:
 except ImportError:
     from collections import MutableMapping  # Py2
 
-__version__ = '0.80'
+__version__ = '0.81'
 if os.name == 'nt':
-    _sensitive = False
+    _sensitive_default = False
 else:
-    _sensitive = True
+    _sensitive_default = True
 
 
 class Entry(str):
@@ -37,7 +37,9 @@ class Entry(str):
 
     @property
     def bool(self):
-        ''' '''
+        ''' Convert a boolean-like string value into a Boolean.
+            Note: the rules are a bit different than string "truthiness."
+        '''
         lower = self.lower()
         if lower.isdigit():
             return bool(int(lower))
@@ -94,14 +96,14 @@ class Entry(str):
 
 
 class Environment(MutableMapping):
-    ''' Presents a simplified view of the OS Environment.
+    ''' A mapping object that presents a simplified view of the OS Environment.
 
         blankify takes precedence over noneify.
     '''
     _Entry_class = Entry    # save for Python2 compatibility :-/
 
     def __init__(self, environ=os.environ,
-                       sensitive=_sensitive,
+                       sensitive=_sensitive_default,
                        blankify=False,
                        noneify=True,
                        writable=False,
@@ -118,6 +120,7 @@ class Environment(MutableMapping):
         if sensitive:
             setobj(self, '_envars', environ)
         else:
+            # TODO: cache these insteaad, will affect .prefix
             setobj(self, '_envars', { name.lower(): value
                                       for name, value in environ.items() })
 
@@ -168,7 +171,7 @@ class Environment(MutableMapping):
 
     def __repr__(self):
         entry_list = ', '.join([ ('%s=%r' % (k, v)) for k, v in self.items() ])
-        return 'dict(%s)' % entry_list
+        return '%s(%s)' % (self.__class__.__name__, entry_list)
 
     def prefix(self, prefix, lowercase=True):
         ''' Compat with kr/env, lowercased.
@@ -332,5 +335,8 @@ if __name__ == '__main__':
     )
 
 else:
+    # save original module for later, just in case it's needed.
+    Environment._module = sys.modules[__name__]
+
     # Wrap module with instance for direct access
     sys.modules[__name__] = Environment()
