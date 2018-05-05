@@ -173,10 +173,28 @@ class Environment(MutableMapping):
     def prefix(self, prefix, lowercase=True):
         ''' Compat with kr/env, lowercased.
 
-        '''                                           # str strips Entry
-        return { (key.lower() if lowercase else key): str(self._envars[key])
-                 for key in self._envars.keys()
-                 if key.startswith(prefix) }
+            > xdg = env.prefix('XDG_')
+
+            > for key, value in xdg.items():
+                 print('%-20s' % key, value[:6], '…')
+            config_dirs      /etc/x…
+            current_desktop  MATE
+            data_dirs        /usr/s…
+            …
+        '''
+        env_subset = {}
+        for key in self._envars.keys():
+            if key.startswith(prefix):
+                new_key = key[len(prefix):]  # cut front
+                new_key = new_key.lower() if lowercase else new_key
+                env_subset[new_key] = str(self._envars[key]) # str strips Entry
+
+        return Environment(environ=env_subset,
+                           sensitive=self._sensitive,
+                           blankify=self._blankify,
+                           noneify=self._noneify,
+                           writable=self._writable,
+                          )
 
     def map(self, **kwargs):
         ''' Compat with kr/env. '''
@@ -241,7 +259,7 @@ if __name__ == '__main__':
         KR/env compatibility::
 
             >>> sorted(env.prefix('XDG_', False).keys())
-            ['XDG_DATA_DIRS', 'XDG_SESSION_ID', 'XDG_SESSION_TYPE']
+            ['DATA_DIRS', 'SESSION_ID', 'SESSION_TYPE']
 
             >>> env.map(username='USER')
             {'username': 'fred'}
