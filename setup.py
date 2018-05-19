@@ -21,13 +21,13 @@ except IOError:
 
 
 setup(
-    name          = 'ez_env',
+    name          = 'ezenv',
     version       = version,
     description   = 'A more convenient interface to environment variables.',
     author        = 'Mike Miller',
     author_email  = 'mixmastamyk@bitbucket.org',
     url           = 'https://github.com/mixmastamyk/env',
-    license       = 'BSD',
+    license       = 'LGPL',
     py_modules    = ['env'],
 
     long_description = long_description,
@@ -36,9 +36,10 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
         'Operating System :: POSIX :: Linux',
         'Operating System :: Microsoft :: Windows',
+        'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',

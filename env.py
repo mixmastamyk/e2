@@ -6,7 +6,7 @@
     Simplified access to environment variables in Python.
 
     @copyright: 2018 by Mike Miller
-    @license: BSD
+    @license: LGPL
 
 '''
 import sys, os
@@ -15,7 +15,7 @@ try:
 except ImportError:
     from collections import MutableMapping  # Py2
 
-__version__ = '0.81'
+__version__ = '0.83'
 if os.name == 'nt':
     _sensitive_default = False
 else:
@@ -120,7 +120,7 @@ class Environment(MutableMapping):
         if sensitive:
             setobj(self, '_envars', environ)
         else:
-            # TODO: cache these insteaad, will affect .prefix
+            # TODO: cache these instead, will affect .prefix
             setobj(self, '_envars', { name.lower(): value
                                       for name, value in environ.items() })
 
@@ -174,7 +174,8 @@ class Environment(MutableMapping):
         return '%s(%s)' % (self.__class__.__name__, entry_list)
 
     def prefix(self, prefix, lowercase=True):
-        ''' Compat with kr/env, lowercased.
+        ''' Returns a dictionary of keys with the same prefix.
+            Compat with kr/env, lowercased.
 
             > xdg = env.prefix('XDG_')
 
@@ -200,7 +201,7 @@ class Environment(MutableMapping):
                           )
 
     def map(self, **kwargs):
-        ''' Compat with kr/env. '''
+        ''' Change a name on the fly.  Compat with kr/env. '''
         return { key: str(self._envars[kwargs[key]])  # str strips Entry
                  for key in kwargs }
 
@@ -300,9 +301,9 @@ if __name__ == '__main__':
         Sensitive False::
 
             >>> env = Environment(testenv, sensitive=False)
-            >>> str(env.USER)                           # repr
+            >>> str(env.USER)                           # interactive repr
             'fred'
-            >>> str(env.user)                           # repr
+            >>> str(env.user)                           # interactive repr
             'fred'
 
         Errors::

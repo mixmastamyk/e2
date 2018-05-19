@@ -1,13 +1,53 @@
 
-env
-============
+EZ Environment
+================
 
-*Environment variables for sentient lifeforms.*
+*"For easy access, baby!  …That's right.'"*
+
+TL; DR:
+
+.. code:: python
+
+    >>> import env
+
+    >>> env.SERVER_PORT.int
+    8080
+
+
+The E.Z.E.nvironment module has its own
+`theme song <https://youtu.be/Igxl7YtS1vQ?t=1m08s>`_:
+
+    *"We want Eazy!"*
+
+    | *EAZY!*
+    | *Everybody come on!*
+    | *EAZY!*
+    | *Who yall came to see?*
+    | *EAZY!*
+    | *A little louder come on!*
+    | *EAZY!*
+    | *Get those hands in the air!*
+    | *EAZY!*
+    | *Come on, come on say it!*
+    | *EAZY!*
+    | *A little louder come on!*
+    | *EAZY!*
+    | *Come on make some noise!*
+    |
+    | *A miracle of modern creation*
+    | *Eazy E's on the set, hyped up with the bass*
+    | *And a little bit of what ya love*
+    | *From a brother who's smooth like a criminal*
+    | *I mean subliminal…*
+
+
+Background
+---------------
 
 It's always been a tad clumsy to access environment variables and combine them
 with other strings in Python,
 compared to shell languages at least.
-For example, look how easy in bash:
+For example, look how easy it is in bash:
 
 .. code:: shell
 
@@ -15,9 +55,9 @@ For example, look how easy in bash:
     Libraries: /usr/local/lib
 
 In Python-land however,
-even the new-fangled string interpolation doesn't really help.
-Required opposite/escaped quotes and brackets complicate and unfortunately
-add to the visual clutter:
+required opposite/escaped quotes and brackets complicate and unfortunately
+add to the visual clutter.
+Even the new-fangled string interpolation doesn't really help:
 
 .. code:: python
 
@@ -39,11 +79,11 @@ primarily through direct attribute access:
 
     >>> import env
 
-    >>> print(f'Libraries: {env.PWD}/lib')
-    Libraries: /usr/local/lib
-
     >>> join(env.PWD, 'lib')
     '/usr/local/lib'
+
+    >>> print(f'Libraries: {env.PWD}/lib')
+    Libraries: /usr/local/lib
 
 But wait, there's more!
 
@@ -52,9 +92,9 @@ Install
 
 .. code:: shell
 
-    ⏵ pip3 install --user $PKG_NAME  # TBD
+    ⏵ pip3 install --user ezenv  # env was taken :-/
 
-BSD licensed.
+LGPL licensed.
 
 
 Options
@@ -120,7 +160,7 @@ option.
 Sensitivity 😢
 ~~~~~~~~~~~~~~~~
 
-Variables are case-sensitive by default on Unix, not under Windows.
+Variables are case-sensitive by default on Unix, *not* under Windows.
 
 While sensitivity can be disabled to use variable names in lowercase,
 be aware that variables and dictionary methods are in the same namespace,
@@ -241,6 +281,7 @@ To interpret them case-insensitively:
 
 As always, standard tests or ``bool()`` on the entry can be done to check for
 standard string "truthiness."
+Such a test would return True on the string '0'.
 
 
 Paths
@@ -257,14 +298,13 @@ use one or more of the following:
 .. code:: python
 
     >>> env.XDG_DATA_DIRS.list
-    ['/usr/local/share', '/usr/share']
+    ['/usr/local/share', '/usr/share', ...]
 
     >>> env.SSH_AUTH_SOCK.path
     Path('/run/user/1000/keyring/ssh')
 
     >>> env.XDG_DATA_DIRS.path_list
-    [Path('/usr/local/share'), Path('/usr/share'), …]
-
+    [Path('/usr/local/share'), Path('/usr/share'), ...]
 
 
 Compatibility
@@ -284,7 +324,12 @@ package by implementing its ``prefix`` and ``map`` functions:
     >>> env.map(username='USER')
     {'username': 'fred'}
 
-The lowercase transform can be disabled by passing another false-like argument.
+The lowercase transform can be disabled by passing another false-like value
+as the second argument.
+
+While the package above has the coveted ``env`` namespace on PyPI,
+ezenv uses the simple module name and provides an implementation of the
+interface.
 
 
 Tests
@@ -294,13 +339,16 @@ Can be run here:
 
 .. code:: shell
 
-    ⏵ python3 -m $PKG_NAME -v
+    ⏵ python3 -m env -v
 
 Though the module works under Python2,
 several of the tests *don't*,
 because Py2 does Unicode differently or
-doesn't have the facilities available to handle them (pathlib).
+doesn't have the facilities available to handle them by default (pathlib).
 Haven't had the urge to work around that due to declining interest.
+
+FYI, a reference to the original module object is kept at ``env._module``
+just in case it is needed for some reason.
 
 
 Pricing
