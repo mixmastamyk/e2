@@ -207,12 +207,18 @@ form by default:
     Entry('PWD', '/usr/local')
 
 No matter however,
-as any operation that occurs renders the string value as normal:
+as we've seen in the previous sections,
+just about any operation renders the string value as normal.
+(``.value``, ``.name``, and ``str()`` are available for belt & suspenders
+types.)
 
 .. code:: python
 
     >>> print(env.PWD)
     /usr/local
+
+    >>> env.PWD.value, str(env.PWD)
+    ('/tmp', '/tmp')
 
 The reason behind this custom object is so that variables can offer additional
 functionality, such as parsing or converting the value to another type,
