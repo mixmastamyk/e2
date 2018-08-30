@@ -276,18 +276,19 @@ To interpret them case-insensitively:
     >>> env.QT_ACCESSIBILITY
     Entry('QT_ACCESSIBILITY', '1')
 
-    >>> env.QT_ACCESSIBILITY.bool
+    >>> env.QT_ACCESSIBILITY.truthy
     True
 
     >>> env = Environment(writable=True)
     >>> env.QT_ACCESSIBILITY = '0'          # set to '0'
 
-    >>> env.QT_ACCESSIBILITY.bool
+    >>> env.QT_ACCESSIBILITY.truthy
     False
 
 As always, standard tests or ``bool()`` on the entry can be done to check for
-standard string "truthiness."
-Such a test would return True on the string '0'.
+string "truthiness."
+Such a test checks if the string is empty or not,
+and would return True on '0'.
 
 
 Paths
@@ -355,6 +356,15 @@ Haven't had the urge to work around that due to declining interest.
 
 FYI, a reference to the original module object is kept at ``env._module``
 just in case it is needed for some reason.
+
+**Testing _with_ EZEnv:**
+
+Makes it very easy to set up a custom environment to operate under::
+
+    def test_foo():
+        mymodule.env = Environment(environ=dict(NO_COLOR='1'))
+        assert mymodule.color_is_disabled() == True
+
 
 
 Pricing

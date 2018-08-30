@@ -15,7 +15,8 @@ try:
 except ImportError:
     from collections import MutableMapping  # Py2
 
-__version__ = '0.83'
+__version__ = '0.84a0'
+
 if os.name == 'nt':
     _sensitive_default = False
 else:
@@ -36,9 +37,14 @@ class Entry(str):
         self.value = value
 
     @property
-    def bool(self):
+    def truthy(self):
         ''' Convert a boolean-like string value into a Boolean.
             Note: the rules are a bit different than string "truthiness."
+
+            '0'             --> False
+            '1'             --> True
+            ('no', 'false') --> False
+            ('yes', 'true') --> True
         '''
         lower = self.lower()
         if lower.isdigit():
@@ -51,6 +57,7 @@ class Entry(str):
             return False
         else:
             return None
+    bool = truthy  # deprecated
 
     @property
     def float(self):
@@ -59,7 +66,7 @@ class Entry(str):
 
     @property
     def int(self):
-        ''' Return a float. '''
+        ''' Return an intsky. '''
         return int(self)
 
     @property
@@ -243,7 +250,7 @@ if __name__ == '__main__':
             >>> env.STATUS.int
             5150
 
-            >>> env.QT_ACCESSIBILITY.bool               # 0/1/yes/no/true/false
+            >>> env.QT_ACCESSIBILITY.truthy             # 0/1/yes/no/true/false
             True
 
             >>> sorted(env.JSON_DATA.from_json.keys())  # compat < 3.6
