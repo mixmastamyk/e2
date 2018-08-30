@@ -359,12 +359,16 @@ just in case it is needed for some reason.
 
 **Testing _with_ EZEnv:**
 
-Makes it very easy to set up a custom environment to operate under::
+When you've used EZEnv in your module,
+it is very easy to create a custom environment to operate under:
+
+.. code:: python
 
     def test_foo():
+        import mymodule
+
         mymodule.env = Environment(environ=dict(NO_COLOR='1'))
         assert mymodule.color_is_disabled() == True
-
 
 
 Pricing
