@@ -15,7 +15,7 @@ try:
 except ImportError:
     from collections import MutableMapping  # Py2
 
-__version__ = '0.84a1'
+__version__ = '0.84'
 
 if os.name == 'nt':
     _sensitive_default = False
@@ -38,13 +38,13 @@ class Entry(str):
 
     @property
     def truthy(self):
-        ''' Convert a boolean-like string value into a Boolean.
+        ''' Recognize a Boolean-like string value as a Boolean.
             Note: the rules are a bit different than string "truthiness."
 
             '0'             --> False
             '1'             --> True
-            ('no', 'false') --> False
-            ('yes', 'true') --> True
+            ('no', 'false') --> False  # case-insensitive
+            ('yes', 'true') --> True   # case-insensitive
         '''
         lower = self.lower()
         if lower.isdigit():
