@@ -1,6 +1,7 @@
 
-# always do it, having trouble where half the time it doesn't work :(
-.PHONY: docs test
+
+docs: test_quiet
+	rst2html.py readme.rst > readme.html
 
 
 test:
@@ -11,5 +12,10 @@ test_quiet:
 	@python3 env.py; echo status: $$?
 
 
-docs: test_quiet
-	rst2html.py readme.rst > readme.html
+
+publish: test
+	python3 setup.py sdist upload
+
+
+# always do it, having trouble where half the time it doesn't work :(
+.PHONY: docs test publish
