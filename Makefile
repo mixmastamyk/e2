@@ -17,5 +17,13 @@ publish: test
 	python3 setup.py sdist upload
 
 
+clean:
+	git gc
+	rm -rf readme.html build dist
+
+	-find -type d -name __pycache__ -exec rm -rf '{}' \;
+
+
+
 # always do it, having trouble where half the time it doesn't work :(
-.PHONY: docs test publish
+.PHONY: docs test publish clean
