@@ -135,6 +135,18 @@ None will be returned instead:
             pass
 
 
+**Default Values**
+
+The one drawback to returning ``None`` is that there is no ``.get()`` method
+to return a default when the variable isn't found.
+That's easily rectified like so:
+
+.. code:: python
+
+    >>> env.FOO or 'bar'
+    'bar'
+
+
 Blankify
 ~~~~~~~~~~~~
 

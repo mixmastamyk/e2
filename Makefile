@@ -14,7 +14,8 @@ test_quiet:
 
 
 publish: test
-	python3 setup.py sdist upload
+	rm -rf build  # possible wheel bug
+	python3 setup.py sdist bdist_wheel --universal upload
 
 
 clean:
@@ -25,5 +26,5 @@ clean:
 
 
 
-# always do it, having trouble where half the time it doesn't work :(
-.PHONY: docs test publish clean
+# all targets for now
+.PHONY: $(MAKECMDGOALS)

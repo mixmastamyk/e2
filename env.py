@@ -15,7 +15,7 @@ try:
 except ImportError:
     from collections import MutableMapping  # Py2
 
-__version__ = '0.84'
+__version__ = '0.85'
 
 if os.name == 'nt':
     _sensitive_default = False
