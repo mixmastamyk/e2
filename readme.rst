@@ -116,8 +116,15 @@ The following options are available to customize:
                           writable=False,
                          )
 
-Note that a mapping of your own choosing can be passed as the first argument,
+Environ
+~~~~~~~~~~~~
+
+A mapping of your own choosing may be optionally passed in as the first argument,
 for testing and/or other purposes.
+Also, recently learned that
+`os.environb <https://docs.python.org/3/library/os.html#os.environb>`_
+is a thing.
+
 
 Noneify
 ~~~~~~~~~~~~
