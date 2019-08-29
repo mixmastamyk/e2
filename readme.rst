@@ -1,10 +1,14 @@
 
-EZ Environment
+EZ-Environment
 ================
 
 *"For easy access, baby!  …That's right.'"*
 
-TL; DR:
+Have you ever thought handling environment variables in Python should be easier?
+It is now.
+
+
+TL;DR:
 
 .. code:: python
 
@@ -13,8 +17,9 @@ TL; DR:
     >>> env.SERVER_PORT.int
     8080
 
+*"BAM!" —Emeril Lagasse*
 
-The E.Z.E.nvironment module has its own
+The E.Z.E.nvironment module also has its own
 `theme song <https://youtu.be/Igxl7YtS1vQ?t=1m08s>`_:
 
     *"We want Eazy!"*
@@ -34,8 +39,8 @@ The E.Z.E.nvironment module has its own
     | *EAZY!*
     | *Come on make some noise!*
     |
-    | *A miracle of modern creation*
-    | *Eazy E's on the set, hyped up with the bass*
+    | *A miracle of modern creation…*
+    | *EZ E's on the set, hyped up with the bass*
     | *And a little bit of what ya love*
     | *From a brother who's smooth like a criminal*
     | *I mean subliminal…*
@@ -45,30 +50,35 @@ Background
 ---------------
 
 It's always been a tad clumsy to access environment variables and combine them
-with other strings in Python,
+with other strings in Python—\
 compared to shell languages at least.
-For example, look how easy it is in bash:
+For example, look how easy it is in (ba)sh:
 
 .. code:: shell
 
     ⏵ echo "Libraries: $PWD/lib"
     Libraries: /usr/local/lib
 
-In Python-land however,
-required opposite/escaped quotes and brackets complicate and unfortunately
-add to the visual clutter.
-Even the new-fangled string interpolation doesn't really help:
+Unfortunately over in Python-land,
+required, escaped quotes and brackets
+serve mostly to complicate and add to visual clutter,
+reducing speed of comprehension.
 
 .. code:: python
 
     >>> from os import environ
+    >>> from os.path import join
+
+    >>> join(environ['PWD'], 'lib')
+    '/usr/local/lib'
+
+Even the new-fangled string interpolation doesn't help as much as might be
+expected:
+
+.. code:: python
 
     >>> print(f'Libraries: {environ["PWD"]}/lib')
     Libraries: /usr/local/lib
-
-    >>> from os.path import join
-    >>> join(environ['PWD'], 'lib')
-    '/usr/local/lib'
 
 
 With that in mind, allow me to introduce the ``env`` module.
@@ -79,13 +89,14 @@ primarily through direct attribute access:
 
     >>> import env
 
-    >>> join(env.PWD, 'lib')
-    '/usr/local/lib'
+    >>> print('Term:', env.TERM)
+    Term: xterm-256color
 
     >>> print(f'Libraries: {env.PWD}/lib')
     Libraries: /usr/local/lib
 
 But wait, there's more!
+
 
 Install
 ---------------
@@ -94,170 +105,173 @@ Install
 
     ⏵ pip3 install --user ezenv  # env was taken :-/
 
-LGPL licensed.
+ ☛ LGPL licensed. ☚
 
 
-Options
------------
+Environment and options
+------------------------
 
-By default the module loads the environment into its namespace,
-so no additional mapping instance has to be created or imported.
-Unless you want to configure the interface further, of course.
+On import the module loads the environment into its namespace,
+thereby working like a dictionary with convenient attribute access.
+
+So, no additional mapping instance has to be created or imported,
+unless you'd like to configure the interface further.
 The following options are available to customize:
 
 .. code:: python
 
     >>> from env import Environment
 
-    >>> env = Environment(environ=os.environ,
-                          blankify=False,
-                          noneify=True,
-                          sensitive=…,
-                          writable=False,
-                         )
+    >>> env = Environment(
+            environ=os.environ,
+            sensitive=True|False,  # case: platform default
+            writable=False,
+        )
 
-Environ
-~~~~~~~~~~~~
+Param: environ
+~~~~~~~~~~~~~~
 
-A mapping of your own choosing may be optionally passed in as the first argument,
+A mapping of your own choosing may optionally be passed in as the first argument,
 for testing and/or other purposes.
-Also, recently learned that
+I've recently learned that
 `os.environb <https://docs.python.org/3/library/os.html#os.environb>`_
-is a thing.
+(bytes interface) is a thing,
+for example.
 
 
-Noneify
-~~~~~~~~~~~~
+.. ~ Noneify
+.. ~ ~~~~~~~~~~~~
 
-Enabled by default,
-this one signals non-existent variables by returning None.
-It allows one to easily test for a variable and not have to worry about
-catching exceptions.
-If the variable is not set,
-None will be returned instead:
+.. ~ Enabled by default,
+.. ~ this one signals non-existent variables by returning None.
+.. ~ It allows one to easily test for a variable and not have to worry about
+.. ~ catching exceptions.
+.. ~ If the variable is not set,
+.. ~ None will be returned instead:
 
-.. code:: python
+.. ~ .. code:: python
 
-    >>> if env.COLORTERM:   # is not None or ''
-            pass
-
-
-**Default Values**
-
-The one drawback to returning ``None`` is that there is no ``.get()`` method
-to return a default when the variable isn't found.
-That's easily rectified like so:
-
-.. code:: python
-
-    >>> env.FOO or 'bar'
-    'bar'
+    .. ~ >>> if env.COLORTERM:   # is not None or ''
+            .. ~ pass
 
 
-Blankify
-~~~~~~~~~~~~
+.. ~ **Default Values**
 
-Off by default,
-this option mimics the behavior of most command-line shells.
-Namely if the variable isn't found,
-it doesn't complain and returns an empty string instead.
-Could be a bug-magnet,
-but here if you need it for compatibility.
-Blankify takes precedence over Noneify if enabled.
+.. ~ The one drawback to returning ``None`` is that there is no ``.get()`` method
+.. ~ to return a default when the variable isn't found.
+.. ~ That's easily rectified like so:
+
+.. ~ .. code:: python
+
+    .. ~ >>> env.FOO or 'bar'
+    .. ~ 'bar'
 
 
-Writable
-~~~~~~~~~~~~
+.. ~ Blankify
+.. ~ ~~~~~~~~~~~~
 
-By default the Environment object does not allow modifications since such
-variables are rarely read after start up.
+.. ~ Off by default,
+.. ~ this option mimics the behavior of most command-line shells.
+.. ~ Namely if the variable isn't found,
+.. ~ it doesn't complain and returns an empty string instead.
+.. ~ This can make some cases simpler,
+.. ~ as fewer checks for errors are needed when checking contents::
+
+    .. ~ if env.LANG.endswith('UTF-8'):
+        .. ~ pass
+
+.. ~ instead of the Noneify version::
+
+    .. ~ if env.LANG and env.LANG.endswith('UTF-8'):
+        .. ~ pass
+
+.. ~ However,
+.. ~ it may be a bug-magnet in the case the variable is misspelled,
+.. ~ It is here if you need it for compatibility.
+.. ~ Blankify takes precedence over Noneify if enabled.
+
+
+Param: writable
+~~~~~~~~~~~~~~~
+
+By default the Environment object/module does not allow modification since it
+is rarely needed.
 This setting helps to remind us of that fact,
-though the object can be easily be changed to writable by enabling this
-option.
+though the object can be easily be changed to writable if need be by enabling
+this option.
 
 
-Sensitivity 😢
-~~~~~~~~~~~~~~~~
+Param: sensitivity 😢
+~~~~~~~~~~~~~~~~~~~~~~
 
-Variables are case-sensitive by default on Unix, *not* under Windows.
+Variables are case-sensitive by default on Unix,
+*insensitive* under Windows.
 
-While sensitivity can be disabled to use variable names in lowercase,
+While case sensitivity can be disabled to use variable names in mixed or
+lower-case,
 be aware that variables and dictionary methods are in the same namespace,
 which could potentially be problematic if they are not divided by case.
 For this reason, using variable names such as "keys" and "items"
 are not a good idea while in insensitive mode.
 *shrug*
 
-
-Misc
-~~~~~~~~~~~~~~~~
-
-**Exceptions**
-
-If both ``blankify`` and ``noneify`` are disabled,
-you'll get a lovely AttributeError or KeyError on missing keys,
-depending on how the variable was accessed.
-
-**Get-Item Form**
-
-Get-item [bracketed] form also works,
-for use in cases where the variable name is in a string,
-due to the fact that the module/Environment-instance is still a dictionary
-underneath:
+Workaround: use "get item" / dictionary-style syntax when needed:
 
 .. code:: python
 
     varname = 'COLORTERM'
     env[varname]
+    env['keys']  # :-/
 
 
 Entry Objects
 ----------------
 
 While using ``env`` at the interactive prompt,
-you may be surprised that a variable entry is not a simple string but rather
-an extended string-like object called an Entry.
-This is most evident at the prompt because it prints a "representation"
+you may be surprised that a variable value is not a simple string but rather
+an extended string-like object called an "Entry."
+This is most evident at the prompt since it prints a "representation"
 form by default:
 
 .. code:: python
 
-    >>> env.PWD                             # repr()
+    >>> env.PWD                         # a.k.a. repr()
     Entry('PWD', '/usr/local')
+
+The reason behind this custom object is so that the variables can offer
+additional functionality,
+such as parsing or conversion of the value to another type,
+while not crashing on a non-existent attribute access.
 
 No matter however,
 as we've seen in the previous sections,
 just about any operation renders the string value as normal.
-(``.value``, ``.name``, and ``str()`` are available for belt & suspenders
-types.)
+Attributes ``.name`` and ``.value`` are also available for belt &
+suspenders types:
 
 .. code:: python
 
     >>> print(env.PWD)
     /usr/local
 
-    >>> env.PWD.value, str(env.PWD)
-    ('/tmp', '/tmp')
+    >>> env.PWD.name, env.PWD.value, str(env.PWD)
+    ('PWD', '/tmp', '/tmp')
 
-The reason behind this custom object is so that variables can offer additional
-functionality, such as parsing or converting the value to another type,
-which we'll explore below.
-
-Remember the ``env`` module/Environment-instance works as a dictionary,
-while entry values are strings,
-so their full functionality is available:
+Remember the ``env`` object/module is also a standard dictionary,
+while entry values are also strings,
+so full Python functionality is available:
 
 .. code:: python
 
-    >>> for key, value in env.items():      # it's a dict*
+    >>> for key, value in env.items():  # it's a dict*
             print(key, value)
 
-    # output…
+    # USER fred…
 
-    >>> env.USER.title()                    # it's a str*
+    >>> env.USER.title()                # it's a str*
     'Fred'
 
-    >>> env.TERM.partition('-')             # a safer split
+    >>> env.TERM.partition('-')         # tip: a safer split
     ('xterm', '-', '256color')
 
 *  Sung to the tune, *"It's a Sin,"* by the Pet Shop Boys.
@@ -283,12 +297,12 @@ For example:
     {'one': 1, 'two': 2, 'three': 3}
 
 
-Booleans
-~~~~~~~~~~
+Truthy Values
+~~~~~~~~~~~~~~~~~~~~
 
-Variables may contain boolean-*ish* string values,
+Variable entries may contain boolean-*like* string values,
 such as ``0, 1, yes, no, true, false``, etc.
-To interpret them case-insensitively:
+To interpret them in a case-insensitive manner use the ``.truthy`` property:
 
 .. code:: python
 
@@ -304,10 +318,14 @@ To interpret them case-insensitively:
     >>> env.QT_ACCESSIBILITY.truthy
     False
 
-As always, standard tests or ``bool()`` on the entry can be done to check for
-string "truthiness."
-Such a test checks if the string is empty or not,
-and would return True on '0'.
+
+Standard Boolean Tests
+++++++++++++++++++++++++
+
+As always, standard tests or ``bool()`` on the entry can be done to check a
+string.
+Remember, such a test checks merely if the string is empty or not,
+and would return ``True`` on ``'0'`` or ``'false'``.
 
 
 Paths
@@ -324,7 +342,7 @@ use one or more of the following:
 .. code:: python
 
     >>> env.XDG_DATA_DIRS.list
-    ['/usr/local/share', '/usr/share', ...]
+    ['/usr/local/share', '/usr/share', ...]  # strings
 
     >>> env.SSH_AUTH_SOCK.path
     Path('/run/user/1000/keyring/ssh')
@@ -332,20 +350,23 @@ use one or more of the following:
     >>> env.XDG_DATA_DIRS.path_list
     [Path('/usr/local/share'), Path('/usr/share'), ...]
 
+To split on a different character,
+simply do the split/partition on the string manually.
+
 
 Compatibility
 ---------------
 
 *"What's the frequency Kenneth?"*
 
-This module attempts compatibility with KR's
+This module attempts compatibility with KR's existing
 `env <https://github.com/kennethreitz/env>`_
 package by implementing its ``prefix`` and ``map`` functions:
 
 .. code:: python
 
     >>> env.prefix('XDG_')
-    {'xdg_config_dirs': '/etc/xdg/xdg-mate:/etc/xdg', …}
+    {'config_dirs': '/etc/xdg/xdg-mate:/etc/xdg', ...}
 
     >>> env.map(username='USER')
     {'username': 'fred'}
@@ -354,7 +375,7 @@ The lowercase transform can be disabled by passing another false-like value
 as the second argument.
 
 While the package above has the coveted ``env`` namespace on PyPI,
-ezenv uses the simple module name and provides an implementation of the
+ezenv uses the same simple module name and provides an implementation of the
 interface.
 
 
@@ -367,21 +388,26 @@ Can be run here:
 
     ⏵ python3 -m env -v
 
-Though the module works under Python2,
+Though this module works under Python2,
 several of the tests *don't*,
 because Py2 does Unicode differently or
-doesn't have the facilities available to handle them by default (pathlib).
+doesn't have the facilities available to handle them by default
+(pathlib/f-string).
 Haven't had the urge to work around that due to declining interest.
 
 FYI, a reference to the original module object is kept at ``env._module``
 just in case it is needed for some reason.
 
-**Testing _with_ EZEnv:**
 
-When you've used EZEnv in your module,
+Testing *with* ezenv
+~~~~~~~~~~~~~~~~~~~~~
+
+When you've used ``ezenv`` in your project,
 it is very easy to create a custom environment to operate under:
 
 .. code:: python
+
+    from env import Environment
 
     def test_foo():
         import mymodule

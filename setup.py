@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import setuptools
 from distutils.core import setup
 
 # grab metadata

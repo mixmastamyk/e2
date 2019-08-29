@@ -7,28 +7,32 @@
 
     @copyright: 2018 by Mike Miller
     @license: LGPL
-
 '''
+#
+#  The implementation below is odd at times due to using the module as a
+#  container.
+#
 import sys, os
 try:
     from collections.abc import MutableMapping
 except ImportError:
     from collections import MutableMapping  # Py2
 
-__version__ = '0.86'
 
-if os.name == 'nt':
-    _sensitive_default = False
-else:
-    _sensitive_default = True
+__version__ = '0.90a1'
 
 
-class Entry(str):
-    ''' Represents an entry in the environment.
+class EnvironmentVariable(str):
+    ''' Represents a variable entry in the environment.  Base class.
 
         Contains the functionality of strings plus a number of convenience
         properties for type conversion.
     '''
+    pass
+
+
+class Entry(EnvironmentVariable):
+    ''' Represents an existing entry in the environment. '''
     def __new__(cls, name, value):
         return str.__new__(cls, value)  # Py2/3
 
@@ -38,13 +42,15 @@ class Entry(str):
 
     @property
     def truthy(self):
-        ''' Recognize a Boolean-like string value as a Boolean.
-            Note: the rules are a bit different than string "truthiness."
+        ''' Convert a Boolean-like string value to a Boolean or None.
+            Note: the rules are different than string type "truthiness."
 
+            ''              --> False
             '0'             --> False
             '1'             --> True
-            ('no', 'false') --> False  # case-insensitive
-            ('yes', 'true') --> True   # case-insensitive
+            ('no', 'false') --> False       # case-insensitive
+            ('yes', 'true') --> True        # case-insensitive
+            else            --> None
         '''
         lower = self.lower()
         if lower.isdigit():
@@ -66,7 +72,7 @@ class Entry(str):
 
     @property
     def int(self):
-        ''' Return an intsky. '''
+        ''' Return an int. '''
         return int(self)
 
     @property
@@ -96,30 +102,71 @@ class Entry(str):
         return loads(self)
 
     def __repr__(self):
-        if self.value:
-            return "Entry('%s', '%s')" % (self.name, self.value)
-        else:
-            return ''
+        return '%s(%r, %r)' % (self.__class__.__name__, self.name, self.value)
+
+
+class NullEntry(EnvironmentVariable):
+    ''' Represents an non-existent entry in the environment.
+
+        This is a None-like convenience object that won't throw AttributeError
+        on attribute lookups.  Attributes are instead returned as "falsey"
+        numeric zero or empty string/containers.
+    '''
+    def __new__(cls, name):
+        return str.__new__(cls, '')  # Py2/3
+
+    def __init__(self, name):
+        self.name = name
+        self.value = None
+
+    def __bool__(self):
+        return False
+
+    @property
+    def truthy(self):
+        return None if (self.value is None) else False
+
+    @property
+    def float(self):
+        return 0.0
+
+    @property
+    def int(self):
+        return 0
+
+    @property
+    def list(self):
+        return []
+
+    @property
+    def path(self):
+        return None
+
+    @property
+    def path_list(self):
+        return []
+
+    @property
+    def from_json(self):
+        return {}
+
+    def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.name)
 
 
 class Environment(MutableMapping):
     ''' A mapping object that presents a simplified view of the OS Environment.
-
-        blankify takes precedence over noneify.
     '''
-    _Entry_class = Entry    # save for Python2 compatibility :-/
+    _Entry_class = Entry            # save for Python2 compatibility :-/
+    _NullEntry_class = NullEntry
 
     def __init__(self, environ=os.environ,
-                       sensitive=_sensitive_default,
-                       blankify=False,
-                       noneify=True,
+                       sensitive=False if os.name == 'nt' else True,
                        writable=False,
                 ):
         # setobj - prevents infinite recursion due to custom setattr
         # https://stackoverflow.com/a/16237698/450917
         setobj = object.__setattr__
-        setobj(self, '_blankify', blankify)
-        setobj(self, '_noneify', noneify),
         setobj(self, '_original_env', environ),
         setobj(self, '_sensitive', sensitive),
         setobj(self, '_writable', writable),
@@ -127,7 +174,6 @@ class Environment(MutableMapping):
         if sensitive:
             setobj(self, '_envars', environ)
         else:
-            # TODO: cache these instead, will affect .prefix
             setobj(self, '_envars', { name.lower(): value
                                       for name, value in environ.items() })
 
@@ -137,25 +183,19 @@ class Environment(MutableMapping):
     def __getattr__(self, name):
         ''' Customize attribute access, allow direct access to variables. '''
 
-        # need an loophole for configuring a new instance
+        # need a loophole for configuring a new instance
         if name == 'Environment':
             return Environment
         elif name == 'Entry':
-            return Entry or self._Entry_class  # Py2
+            return Entry or self._Entry_class  # Py2 compat
 
         if not self._sensitive:
             name = name.lower()
 
         try:
-            #~ return Entry(name, self._envars[name])
-            return self._Entry_class(name, self._envars[name])  # Py2 compat
+            return self._Entry_class(name, self._envars[name])
         except KeyError as err:
-            if self._blankify:
-                return self._envars.setdefault(name, Entry('', ''))
-            elif self._noneify:
-                return None
-            else:
-                raise AttributeError(name)
+            return self._NullEntry_class(name)
 
     def __setattr__(self, name, value):
         if self._writable:
@@ -164,27 +204,32 @@ class Environment(MutableMapping):
             if self._original_env is os.environ:  # push to environment
                 os.environ[name] = value
         else:
-            raise AttributeError('Environment is read-only.')
+            raise AttributeError('This Environment is read-only.')
 
     def __delattr__(self, name):
         del self._envars[name]
 
     # MutableMapping needs these implemented, defers to internal dict
-    def __len__(self):                  return len(self._envars)
-    def __delitem__(self, key):         del self._envars[key]
-    def __getitem__(self, key):         return self._envars[key]
-    def __setitem__(self, key, item):   self.data[key] = item
-    def __iter__(self):                 return iter(self._envars)
+    def __len__(self):
+        return len(self._envars)
+    def __delitem__(self, key):
+        del self._envars[key]
+    def __getitem__(self, key):
+        return self._envars[key]
+    def __setitem__(self, key, item):
+        self.data[key] = item
+    def __iter__(self):
+        return iter(self._envars)
 
     def __repr__(self):
         entry_list = ', '.join([ ('%s=%r' % (k, v)) for k, v in self.items() ])
         return '%s(%s)' % (self.__class__.__name__, entry_list)
 
-    def prefix(self, prefix, lowercase=True):
+    def from_prefix(self, prefix, lowercase=True, strip=True):
         ''' Returns a dictionary of keys with the same prefix.
             Compat with kr/env, lowercased.
 
-            > xdg = env.prefix('XDG_')
+            > xdg = env.from_prefix('XDG_')
 
             > for key, value in xdg.items():
                  print('%-20s' % key, value[:6], '…')
@@ -196,68 +241,116 @@ class Environment(MutableMapping):
         env_subset = {}
         for key in self._envars.keys():
             if key.startswith(prefix):
-                new_key = key[len(prefix):]  # cut front
+                if strip:  # cut prefix
+                    new_key = key[len(prefix):]
                 new_key = new_key.lower() if lowercase else new_key
-                env_subset[new_key] = str(self._envars[key]) # str strips Entry
+                env_subset[new_key] = self._envars[key]
 
-        return Environment(environ=env_subset,
-                           sensitive=self._sensitive,
-                           blankify=self._blankify,
-                           noneify=self._noneify,
-                           writable=self._writable,
-                          )
+        return Environment(
+            environ=env_subset,
+            sensitive=self._sensitive,
+            writable=self._writable,
+        )
+    prefix = from_prefix
 
     def map(self, **kwargs):
         ''' Change a name on the fly.  Compat with kr/env. '''
-        return { key: str(self._envars[kwargs[key]])  # str strips Entry
+        return { key: self._envars[kwargs[key]]  # str strips Entry
                  for key in kwargs }
 
 
 if __name__ == '__main__':
 
-    __doc__ += '''  # keep tests close
+    # keep tests close
+    testenv = dict(
+        EMPTY='',
+        JSON_DATA='{"one":1, "two":2, "three":3}',
+        PI='3.1416',
+        READY='no',
+        PORT='5150',
+        QT_ACCESSIBILITY='1',
+        SSH_AUTH_SOCK='/run/user/1000/keyring/ssh',
+        TERM='xterm-256color',
+        USER='fred',
+        XDG_DATA_DIRS='/usr/local/share:/usr/share',
+        XDG_SESSION_ID='c1',
+        XDG_SESSION_TYPE='x11',
+    )
+    __doc__ += '''
 
         Default::
 
-            >>> env = Environment(testenv, writable=True)
+            >>> env = Environment(testenv, sensitive=True, writable=True)
 
-            >>> env.USER                                # repr
+            >>> env.USER                                # exists, repr
             Entry('USER', 'fred')
 
-            >>> env.USER.title()                        # str ops available
+            >>> str(env.USER)                           # exists, str
+            'fred'
+
+            >>> env.USER + '_suffix'                    # str ops
+            'fred_suffix'
+
+            >>> env.USER.title()                        # str ops II
             'Fred'
 
-            >>> env.user                                # missing --> None
+            >>> bool(env.USER)                          # check exists/not empty
+            True
 
-            >>> print(f'term: {env.TERM}')              # interpolation
+            >>> print(f'term: {env.TERM}')              # via interpolation
             term: xterm-256color
 
-            >>> 'NOPE' in env                           # check existence
+            >>> 'NO_EXISTO' in env                      # check existence, DNE
+            False
+
+            >>> env.NO_EXISTO or 'default'              # DNE with default
+            'default'
+
+            >>> env.NO_EXISTO                           # var DNE repr
+            NullEntry('NO_EXISTO')
+
+            >>> env.NO_EXISTO.value is None             # check existence II
+            True
+
+            >>> bool(env.NO_EXISTO)                     # check when DNE: False
             False
 
             >>> 'EMPTY' in env                          # check existence
             True
 
-            >>> bool(env.EMPTY)                         # check if empty: False
+            >>> env.EMPTY                               # exists but empty
+            Entry('EMPTY', '')
+
+            >>> env.EMPTY.value is None                 # check existence II
             False
 
-            >>> env['PI']                               # getitem syntax
-            '3.14'
+            >>> bool(env.EMPTY)                         # check when empty: False
+            False
+
+            >>> env.EMPTY or 'default'                  # exists, blank w/ def.
+            'default'
+
+            >>> key_name = 'PI'
+            >>> env[key_name]                           # getitem syntax
+            '3.1416'
 
             >>> env.PI.float                            # type conversion
-            3.14
+            3.1416
 
-            >>> env.STATUS.int
+            >>> env.PORT.int or 9000                    # type conv. w/ default
             5150
 
             >>> env.QT_ACCESSIBILITY.truthy             # 0/1/yes/no/true/false
             True
 
-            >>> sorted(env.JSON_DATA.from_json.keys())  # compat < 3.6
+            >>> sorted(env.JSON_DATA.from_json.keys())  # sorted: compat < 3.6
             ['one', 'three', 'two']
 
             >>> env.XDG_DATA_DIRS.list
             ['/usr/local/share', '/usr/share']
+
+            >>> env.XDG_DATA_DIRZ.list                  # DNE fallback
+            []
 
             # using isinstance to avoid Platform errs:
             >>> from pathlib import Path
@@ -272,11 +365,14 @@ if __name__ == '__main__':
             >>> sorted(env.prefix('XDG_', False).keys())
             ['DATA_DIRS', 'SESSION_ID', 'SESSION_TYPE']
 
+            >>> sorted(env.prefix('XDG_', False).values())
+            ['/usr/local/share:/usr/share', 'c1', 'x11']
+
             >>> env.map(username='USER')
             {'username': 'fred'}
 
-        Writing possible when writable is set to True (see above),
-        though not typically useful::
+        Writing is possible when writable is set to True (see above),
+        though not exceedingly useful::
 
             >>> env.READY
             Entry('READY', 'no')
@@ -286,24 +382,11 @@ if __name__ == '__main__':
             >>> env.READY
             Entry('READY', 'yes')
 
-        Unicode::
+        Unicode test::
 
             >>> env.MÖTLEY = 'Crüe'
             >>> env.MÖTLEY
             Entry('MÖTLEY', 'Crüe')
-
-        Noneify False::
-
-            >>> env = Environment(testenv, noneify=False)
-            >>> env.USERZ                               # missing, kaboom!
-            Traceback (most recent call last):
-            AttributeError: USERZ
-
-        Blankify True::
-
-            >>> env = Environment(testenv, blankify=True)
-            >>> env.USERZ                               # missing --> blank
-            <BLANKLINE>
 
         Sensitive False::
 
@@ -312,35 +395,14 @@ if __name__ == '__main__':
             'fred'
             >>> str(env.user)                           # interactive repr
             'fred'
-
-        Errors::
-
-            >>> env.XDG_DATA_DIRZ.list               # TODO: figure out
-            Traceback (most recent call last):
-            AttributeError: 'NoneType' object has no attribute 'list'
-
     '''
     import doctest
-
-    testenv = dict(
-        EMPTY='',
-        JSON_DATA='{"one":1, "two":2, "three":3}',
-        PI='3.14',
-        READY='no',
-        STATUS='5150',
-        QT_ACCESSIBILITY='1',
-        SSH_AUTH_SOCK='/run/user/1000/keyring/ssh',
-        TERM='xterm-256color',
-        USER='fred',
-        XDG_DATA_DIRS='/usr/local/share:/usr/share',
-        XDG_SESSION_ID='c1',
-        XDG_SESSION_TYPE='x11',
-    )
 
     # testmod returns (failure_count, test_count):
     sys.exit(
         doctest.testmod(verbose=(True if '-v' in sys.argv else False))[0]
     )
+
 
 else:
     # save original module for later, just in case it's needed.
