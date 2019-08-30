@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import setuptools  # prevents error: invalid command 'bdist_wheel'
 from distutils.core import setup
 
 # grab metadata

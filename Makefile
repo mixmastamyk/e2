@@ -19,10 +19,9 @@ readme.html: test_quiet
 
 
 clean:
-	git gc
 	rm -rf readme.html build dist MANIFEST *.pyc
-
 	-find -type d -name __pycache__ -exec rm -rf '{}' \;
+	git gc
 
 
 
