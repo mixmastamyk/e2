@@ -354,6 +354,87 @@ To split on a different character,
 simply do the split/partition on the string manually.
 
 
+Examples
+---------------
+
+There are generally three cases for environment variables:
+
+**Variable exists, has value:**
+
+.. code:: python
+
+    >>> env.USER                            # exists, repr
+    Entry('USER', 'fred')
+
+    >>> env.USER + '_suffix'                # str ops
+    'fred_suffix'
+
+    >>> env.USER.title()                    # str ops II
+    'Fred'
+
+    >>> print(f'term: {env.TERM}')          # via interpolation
+    term: xterm-256color
+
+    >>> bool(env.USER)                      # check exists & not empty
+    True
+
+    >>> key_name = 'PI'
+    >>> env[key_name]                       # getitem syntax
+    '3.1416'
+
+    >>> env.PI.float                        # type conversion
+    3.1416
+
+    >>> env.PORT.int or 9000                # type conv. w/ default
+    5150
+
+    >>> env.QT_ACCESSIBILITY.truthy         # 0/1/yes/no/true/false
+    True
+
+    >>> env.JSON_DATA.from_json.keys()
+    ['one', 'three', 'two']
+
+    >>> env.XDG_DATA_DIRS.list
+    ['/usr/local/share', '/usr/share']
+
+
+**Variable exists, but is blank:**
+
+.. code:: python
+
+    >>> 'EMPTY' in env                      # check existence
+    True
+
+    >>> env.EMPTY                           # exists but empty
+    Entry('EMPTY', '')
+
+    >>> bool(env.EMPTY)                     # check exists & not empty
+    False
+
+    >>> env.EMPTY or 'default'              # exists, blank w/ default
+    'default'
+
+
+**Variable doesn't exist:**
+
+.. code:: python
+
+    >>> 'NO_EXISTO' in env                  # check existence
+    False
+
+    >>> env.NO_EXISTO or 'default'          # DNE with default
+    'default'
+
+    >>> env.NO_EXISTO                       # Doesn't exist repr
+    NullEntry('NO_EXISTO')
+
+    >>> bool(env.NO_EXISTO)                 # check exists & not empty
+    False
+
+    >>> env.XDG_DATA_DIRz.list              # DNE fallback
+    []
+
+
 Compatibility
 ---------------
 
@@ -365,7 +446,7 @@ package by implementing its ``prefix`` and ``map`` functions:
 
 .. code:: python
 
-    >>> env.prefix('XDG_')
+    >>> env.prefix('XDG_')  # from_prefix preferred
     {'config_dirs': '/etc/xdg/xdg-mate:/etc/xdg', ...}
 
     >>> env.map(username='USER')
@@ -403,7 +484,7 @@ Testing *with* ezenv
 ~~~~~~~~~~~~~~~~~~~~~
 
 When you've used ``ezenv`` in your project,
-it is very easy to create a custom environment to operate under:
+it is easy to create a custom environment to operate under:
 
 .. code:: python
 
