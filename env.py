@@ -19,7 +19,7 @@ except ImportError:
     from collections import MutableMapping  # Py2
 
 
-__version__ = '0.90a1'
+__version__ = '0.90a2'
 
 
 class EnvironmentVariable(str):

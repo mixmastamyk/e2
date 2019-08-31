@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import setuptools  # prevents error: invalid command 'bdist_wheel'
-from distutils.core import setup
+# setuptools prevents error: invalid command 'bdist_wheel'
+from setuptools import setup
 
 # grab metadata
 version = '1.00'
