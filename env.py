@@ -19,7 +19,7 @@ except ImportError:
     from collections import MutableMapping  # Py2
 
 
-__version__ = '0.90a2'
+__version__ = '0.91'
 
 
 class EnvironmentVariable(str):
@@ -28,7 +28,8 @@ class EnvironmentVariable(str):
         Contains the functionality of strings plus a number of convenience
         properties for type conversion.
     '''
-    pass
+    def __init__(self, *args):
+        raise NotImplementedError('Use Entry() or NullEntry() instead.')
 
 
 class Entry(EnvironmentVariable):
@@ -36,9 +37,10 @@ class Entry(EnvironmentVariable):
     def __new__(cls, name, value):
         return str.__new__(cls, value)  # Py2/3
 
-    def __init__(self, name, value):
+    def __init__(self, name, value, sep=os.pathsep):
         self.name = name
         self.value = value
+        self._pathsep = sep
 
     @property
     def truthy(self):
@@ -76,12 +78,12 @@ class Entry(EnvironmentVariable):
         return int(self)
 
     @property
-    def list(self, sep=os.pathsep):
+    def list(self):
         ''' Split a path string (defaults to os.pathsep) and return list.
 
             Use str.split instead when a custom delimiter is needed.
         '''
-        return self.split(sep)
+        return self.split(self._pathsep)
 
     @property
     def path(self):
@@ -90,10 +92,10 @@ class Entry(EnvironmentVariable):
         return Path(self)
 
     @property
-    def path_list(self, sep=os.pathsep):
+    def path_list(self):
         ''' Return list of Path objects. '''
         from pathlib import Path
-        return [ Path(pathstr) for pathstr in self.split(sep) ]
+        return [ Path(pathstr) for pathstr in self.split(self._pathsep) ]
 
     @property
     def from_json(self):
@@ -194,7 +196,7 @@ class Environment(MutableMapping):
 
         try:
             return self._Entry_class(name, self._envars[name])
-        except KeyError as err:
+        except KeyError:
             return self._NullEntry_class(name)
 
     def __setattr__(self, name, value):

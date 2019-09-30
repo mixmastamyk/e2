@@ -2,7 +2,7 @@
 EZ-Environment
 ================
 
-*"For easy access, baby!  …That's right.'"*
+*"For easy access, baby!  …That's right.'"—Eazy-E*
 
 Have you ever thought handling environment variables in Python should be easier?
 It is now.
@@ -126,6 +126,7 @@ The following options are available to customize:
             environ=os.environ,
             sensitive=True|False,  # case: platform default
             writable=False,
+            pathsep=os.pathsep,
         )
 
 Param: environ
@@ -135,7 +136,7 @@ A mapping of your own choosing may optionally be passed in as the first argument
 for testing and/or other purposes.
 I've recently learned that
 `os.environb <https://docs.python.org/3/library/os.html#os.environb>`_
-(bytes interface) is a thing,
+(bytes interface) is a thing that could be passed,
 for example.
 
 
@@ -194,12 +195,11 @@ for example.
 Param: writable
 ~~~~~~~~~~~~~~~
 
-By default the Environment object/module does not allow modification since it
-is rarely needed.
-This setting helps to remind us of that fact,
+By default the Environment object/module does not allow modification since
+writing is rarely needed.
+This default helps to remind us of that fact,
 though the object can be easily be changed to writable if need be by enabling
 this option.
-
 
 Param: sensitivity 😢
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -215,13 +215,14 @@ For this reason, using variable names such as "keys" and "items"
 are not a good idea while in insensitive mode.
 *shrug*
 
-Workaround: use "get item" / dictionary-style syntax when needed:
+Workaround: use "get item" / dictionary-style syntax if needed:
 
 .. code:: python
 
-    varname = 'COLORTERM'
-    env[varname]
     env['keys']  # :-/
+
+.. ~ varname = 'COLORTERM'
+.. ~ env[varname]
 
 
 Entry Objects
@@ -325,7 +326,7 @@ Standard Boolean Tests
 As always, standard tests or ``bool()`` on the entry can be done to check a
 string.
 Remember, such a test checks merely if the string is empty or not,
-and would return ``True`` on ``'0'`` or ``'false'``.
+and would also return ``True`` on ``'0'`` or ``'false'``.
 
 
 Paths
@@ -352,6 +353,8 @@ use one or more of the following:
 
 To split on a different character,
 simply do the split/partition on the string manually.
+(There is a ._pathsep variable that can be set on each entry,
+but not particularly more convenient.)
 
 
 Examples
@@ -434,6 +437,12 @@ There are generally three cases for environment variables:
     >>> env.XDG_DATA_DIRz.list              # DNE fallback
     []
 
+    for data_dir in env.XDG_DATA_DIR.list:
+        # Don't need to worry if this exists or not,
+        # if not, it will be skipped.
+        pass
+
+
 
 Compatibility
 ---------------
@@ -453,7 +462,7 @@ package by implementing its ``prefix`` and ``map`` functions:
     {'username': 'fred'}
 
 The lowercase transform can be disabled by passing another false-like value
-as the second argument.
+as the second argument to ``prefix().``
 
 While the package above has the coveted ``env`` namespace on PyPI,
 ezenv uses the same simple module name and provides an implementation of the
