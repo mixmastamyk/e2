@@ -278,7 +278,7 @@ so full Python functionality is available:
 *  Sung to the tune, *"It's a Sin,"* by the Pet Shop Boys.
 
 
-Parsing & Conversions
+Conversions & Parsing
 -----------------------
 
 Another handy feature of Entry objects is convenient type conversion and
@@ -353,8 +353,9 @@ use one or more of the following:
 
 To split on a different character,
 simply do the split/partition on the string manually.
-(There is a ._pathsep variable that can be set on each entry,
-but not particularly more convenient.)
+
+.. ~ (There is a ._pathsep variable that can be set on each entry,
+.. ~ but not particularly more convenient.)
 
 
 Examples
