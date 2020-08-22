@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# setuptools prevents error: invalid command 'bdist_wheel'
 from setuptools import setup
 
 # grab metadata
@@ -29,7 +27,7 @@ setup(
     author_email  = 'mixmastamyk@bitbucket.org',
     url           = 'https://github.com/mixmastamyk/env',
     license       = 'LGPL',
-    py_modules    = ['env'],
+    py_modules    = ('env',),
 
     long_description = long_description,
     classifiers     = [
