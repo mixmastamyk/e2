@@ -19,7 +19,7 @@ except ImportError:
     from collections import MutableMapping  # Py2
 
 
-__version__ = '0.91'
+__version__ = '0.92'
 
 
 class EnvironmentVariable(str):
@@ -47,25 +47,29 @@ class Entry(EnvironmentVariable):
         ''' Convert a Boolean-like string value to a Boolean or None.
             Note: the rules are different than string type "truthiness."
 
-            ''              --> False
-            '0'             --> False
-            '1'             --> True
-            ('no', 'false') --> False       # case-insensitive
-            ('yes', 'true') --> True        # case-insensitive
-            else            --> None
+            '0'                  --> False
+            '1'                  --> True
+            ('n', 'no', 'false') --> False       # case-insensitive
+            ('y', 'yes', 'true') --> True        # case-insensitive
+            else                 --> raise ValueError()
         '''
         lower = self.lower()
+        result = None
         if lower.isdigit():
-            return bool(int(lower))
-        elif lower in ('yes', 'true'):
-            return True
-        elif lower in ('no', 'false'):
-            return False
-        elif self == '':
-            return False
-        else:
-            return None
-    bool = truthy  # deprecated
+            result = bool(int(lower))
+        elif lower in ('y', 'yes', 'true'):
+            result = True
+        elif lower in ('n', 'no', 'false'):
+            result = False
+        elif self:
+            raise ValueError(f'{self!r} is not a valid value for truthy().')
+
+        return result
+
+    @property
+    def bool(self):
+        ''' Return a bool. '''
+        return bool(self)
 
     @property
     def float(self):
@@ -127,6 +131,10 @@ class NullEntry(EnvironmentVariable):
     @property
     def truthy(self):
         return None if (self.value is None) else False
+
+    @property
+    def bool(self):
+        return False
 
     @property
     def float(self):
